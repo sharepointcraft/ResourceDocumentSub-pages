@@ -1,0 +1,19 @@
+{
+  "@microsoft/generator-sharepoint": {
+    "useGulp": false,
+    "plusBeta": false,
+    "isCreatingSolution": true,
+    "nodeVersion": "22.22.0",
+    "sdksVersions": {},
+    "version": "1.23.2",
+    "libraryName": "resource-document-sub-pages",
+    "libraryId": "aca55c44-738c-49b0-8c93-343a7c596139",
+    "environment": "spo",
+    "packageManager": "npm",
+    "solutionName": "Resource & Document sub-pages",
+    "solutionShortDescription": "Resource & Document sub-pages description",
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "componentType": "webpart"
+  }
+}

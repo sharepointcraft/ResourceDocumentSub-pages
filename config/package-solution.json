@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "resource-document-sub-pages-client-side-solution",
+    "id": "aca55c44-738c-49b0-8c93-343a7c596139",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.23.2"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "Resource & Document sub-pages description"
+      },
+      "longDescription": {
+        "default": "Resource & Document sub-pages description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "resource-document-sub-pages Feature",
+        "description": "The feature that activates elements of the resource-document-sub-pages solution.",
+        "id": "3dca6dd3-16ba-4b96-b67a-32f0a1a835a4",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/resource-document-sub-pages.sppkg"
+  }
+}
