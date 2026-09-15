@@ -1,29 +1,410 @@
+// -----------------------------------------------------------------------------
+// WOODLINE BRAND VARIABLES AND BASE WEB PART STYLES
+// -----------------------------------------------------------------------------
 .resourceDocumentSubPages {
-  overflow: hidden;
-  padding: 1em;
-  color: "[theme:bodyText, default: #323130]";
-  color: var(--bodyText);
-}
+  --navy-primary: #00205c;
+  --navy-deep: #061b48;
+  --navy-medium: #08295c;
+  --navy-blue: #124681;
+  --navy-light: #234e7d;
+  --gold-primary: #d6cd8d;
+  --gold-dark: #806e22;
+  --cream-bg: #f7f5ea;
+  --cream-card: #f2efdf;
+  --text-muted: #687994;
+  --border-light: #e4dec9;
 
-.welcome {
-  text-align: center;
-}
-
-.welcomeImage {
+  box-sizing: border-box;
   width: 100%;
-  max-width: 420px;
+  margin: 0 auto;
+  padding: 0;
+  overflow: hidden;
+  color: var(--navy-primary);
+  background: var(--cream-bg);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  // Make sizing predictable for every element within this web part.
+  *,
+  *::before,
+  *::after {
+    box-sizing: inherit;
+  }
+
+  a {
+    color: inherit;
+  }
 }
 
-.links {
-  a {
-    text-decoration: none;
-    color: "[theme:link, default:#03787c]";
-    color: var(--link); // note: CSS Custom Properties support is limited to modern browsers only
+// -----------------------------------------------------------------------------
+// HERO / PAGE HEADER
+// -----------------------------------------------------------------------------
+.hero {
+  background: linear-gradient(115deg, var(--navy-primary), var(--navy-deep));
+  color: #fff;
+}
 
-    &:hover {
-      text-decoration: underline;
-      color: "[theme:linkHovered, default: #014446]";
-      color: var(--linkHovered); // note: CSS Custom Properties support is limited to modern browsers only
-    }
+.heroInner {
+  width: min(100%, 1160px);
+  margin: 0 auto;
+  padding: 42px 36px 48px;
+}
+
+// Shared button/link treatment used by the hero and cards.
+.backLink,
+.watchButton,
+.calendarButton {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: #fff;
+}
+
+.backLink {
+  border: 1px solid var(--gold-primary);
+  border-radius: 999px;
+  padding: 5px 12px;
+  color: var(--gold-primary);
+  font-size: 10px;
+}
+
+// Small uppercase label shown above selected headings.
+.eyebrow {
+  display: block;
+  margin-top: 17px;
+  color: var(--gold-primary);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.hero h1,
+.resourceDocumentSubPages h2,
+.resourceDocumentSubPages h3 {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 400;
+}
+
+.hero h1 {
+  margin: 7px 0 10px;
+  font-size: clamp(32px, 4vw, 44px);
+  line-height: 1;
+}
+
+.hero p {
+  max-width: 670px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+// -----------------------------------------------------------------------------
+// MAIN PAGE LAYOUT
+// -----------------------------------------------------------------------------
+.content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 270px;
+  gap: 24px;
+  width: min(100%, 1160px);
+  margin: 0 auto;
+  padding: 42px 36px 52px;
+}
+
+.mainColumn {
+  min-width: 0;
+}
+
+// -----------------------------------------------------------------------------
+// VIDEO SECTIONS AND REUSABLE VIDEO CARD
+// -----------------------------------------------------------------------------
+.videoSection + .videoSection {
+  margin-top: 29px;
+}
+
+.videoSection h2 {
+  margin: 0;
+  font-size: 25px;
+  line-height: 1.1;
+}
+
+.sectionIntro {
+  margin: 2px 0 14px;
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+// Creates three equal card columns on desktop.
+.videoGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.videoCard {
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 3px 9px rgba(6, 27, 72, .09);
+}
+
+// Blue area that represents a video thumbnail.
+.videoThumbnail {
+  position: relative;
+  display: flex;
+  min-height: 105px;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, var(--navy-blue), var(--navy-primary));
+}
+
+// Labels positioned in the top corners of the video thumbnail.
+.newBadge,
+.duration {
+  position: absolute;
+  top: 9px;
+  padding: 3px 6px;
+  border-radius: 2px;
+  background: var(--navy-primary);
+  color: var(--gold-primary);
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.newBadge {
+  left: 9px;
+}
+
+.duration {
+  right: 7px;
+  color: #fff;
+}
+
+.playIcon {
+  display: grid;
+  width: 31px;
+  height: 31px;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--navy-blue);
+  font-size: 12px;
+  padding-left: 2px;
+}
+
+.videoContent {
+  min-height: 116px;
+  padding: 12px 11px 10px;
+}
+
+.videoContent h3 {
+  margin: 0 0 5px;
+  font-size: 14px;
+  line-height: 1.06;
+}
+
+.videoContent p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 8px;
+  line-height: 1.4;
+}
+
+.videoContent .videoDate {
+  margin-top: 9px;
+  color: var(--navy-primary);
+  font-size: 9px;
+}
+
+.watchButton,
+.calendarButton {
+  margin-top: 10px;
+  border-radius: 3px;
+  background: var(--navy-primary);
+  padding: 5px 8px;
+  font-size: 8px;
+}
+
+// Override the web part's base link colour so the dark video button is readable.
+.resourceDocumentSubPages .watchButton {
+  color: #fff;
+}
+
+// -----------------------------------------------------------------------------
+// DOCUMENT LIBRARY SIDEBAR
+// -----------------------------------------------------------------------------
+.documentsPanel {
+  align-self: start;
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+  border-radius: 7px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(6, 27, 72, .1);
+}
+
+.documentsHeading {
+  padding: 17px 16px 10px;
+  background: var(--cream-card);
+}
+
+.documentsHeading h2 {
+  margin: 0;
+  font-size: 25px;
+  line-height: 1.05;
+}
+
+.documentsBody {
+  padding: 21px 16px 18px;
+}
+
+.documentsLibraryHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.documentsLibraryHeader h3 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1;
+}
+
+// Gold label displayed beside the document-library title.
+.referenceMaterials {
+  display: inline-block;
+  padding: 9px 12px;
+  color: var(--gold-dark);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  line-height: 1.3;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+// One document row created from an item in the documents array.
+.documentItem {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  gap: 7px;
+  align-items: start;
+  border-top: 1px solid var(--border-light);
+  padding: 5px 0px;
+  text-decoration: none;
+  font-size: 9px;
+}
+
+.documentIcon {
+  display: grid;
+  width: 18px;
+  height: 21px;
+  place-items: center;
+  border-radius: 2px;
+  background: var(--cream-card);
+  color: var(--gold-dark);
+  font-size: 11px;
+}
+
+.documentItem strong,
+.documentItem small {
+  display: block;
+}
+
+.documentItem strong {
+  line-height: 1.2;
+}
+
+.documentItem small {
+  margin-top: 5px;
+  color: var(--text-muted);
+  font-size: 7px;
+}
+
+.documentItem em {
+  color: var(--gold-dark);
+  font-size: 7px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+// -----------------------------------------------------------------------------
+// NEXT TRAINING DAY CALLOUT
+// -----------------------------------------------------------------------------
+.nextTraining {
+  margin-top: 30px;
+  border-radius: 7px;
+  padding: 20px 18px;
+  background: var(--navy-primary);
+  color: #fff;
+}
+
+.nextTraining .eyebrow {
+  margin-top: 0;
+}
+
+.nextTraining h2 {
+  margin: 8px 0 6px;
+  font-size: 22px;
+}
+
+.nextTraining p {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.calendarButton {
+  background: var(--gold-primary);
+}
+
+// Keep the gold call-to-action text in Woodline primary navy blue.
+.resourceDocumentSubPages .calendarButton {
+  color: var(--navy-primary);
+}
+
+// -----------------------------------------------------------------------------
+// RESPONSIVE LAYOUT
+// -----------------------------------------------------------------------------
+@media screen and (max-width: 760px) {
+  .heroInner,
+  .content {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  // Move the document library above the videos on tablet/mobile.
+  .content {
+    grid-template-columns: 1fr;
+  }
+
+  .documentsPanel {
+    order: -1;
+  }
+
+  .videoGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .heroInner {
+    padding-top: 28px;
+    padding-bottom: 32px;
+  }
+
+  .content {
+    padding-top: 28px;
+  }
+
+  // One video card per row on small phones.
+  .videoGrid {
+    grid-template-columns: 1fr;
   }
 }
