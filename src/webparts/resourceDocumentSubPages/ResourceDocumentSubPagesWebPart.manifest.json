@@ -14,6 +14,8 @@
   "requiresCustomScript": false,
   "supportedHosts": ["SharePointWebPart", "TeamsPersonalApp", "TeamsTab", "SharePointFullPage"],
   "supportsThemeVariants": true,
+  // Enables this web part in SharePoint's Full-width section layout.
+  "supportsFullBleed": true,
 
   "preconfiguredEntries": [{
     "groupId": "5c03119e-3074-46fd-976b-c60198311f70", // Advanced
@@ -22,7 +24,8 @@
     "description": { "default": "Resource &amp; Document sub-pages description" },
     "officeFabricIconFontName": "Page",
     "properties": {
-      "description": "Resource &amp; Document sub-pages"
+      "description": "Resource &amp; Document sub-pages",
+      "documentLibraryName": "LearningandDevelopmentVideo"
     }
   }]
 }

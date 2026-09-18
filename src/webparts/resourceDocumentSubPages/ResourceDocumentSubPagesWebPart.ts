@@ -3,6 +3,7 @@ import * as ReactDom from 'react-dom';
 import { Version } from '@microsoft/sp-core-library';
 import {
   type IPropertyPaneConfiguration,
+  PropertyPaneLabel,
   PropertyPaneTextField
 } from '@microsoft/sp-property-pane';
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
@@ -14,6 +15,7 @@ import { IResourceDocumentSubPagesProps } from './components/IResourceDocumentSu
 
 export interface IResourceDocumentSubPagesWebPartProps {
   description: string;
+  documentLibraryName: string;
 }
 
 export default class ResourceDocumentSubPagesWebPart extends BaseClientSideWebPart<IResourceDocumentSubPagesWebPartProps> {
@@ -28,7 +30,11 @@ export default class ResourceDocumentSubPagesWebPart extends BaseClientSideWebPa
         description: this.properties.description,
         isDarkTheme: this._isDarkTheme,
         environmentMessage: this._environmentMessage,
-        userDisplayName: this.context.pageContext.user.displayName
+        userDisplayName: this.context.pageContext.user.displayName,
+        // This authenticated context is used by the service to call SharePoint REST.
+        context: this.context,
+        // Property-pane changes flow to React and trigger a content refresh.
+        documentLibraryName: this.properties.documentLibraryName || 'LearningandDevelopmentVideo'
       }
     );
 
@@ -105,10 +111,15 @@ export default class ResourceDocumentSubPagesWebPart extends BaseClientSideWebPa
           },
           groups: [
             {
-              groupName: strings.BasicGroupName,
+              groupName: 'Training library settings',
               groupFields: [
-                PropertyPaneTextField('description', {
-                  label: strings.DescriptionFieldLabel
+                PropertyPaneLabel('libraryHelp', {
+                  text: 'Enter the SharePoint document library name. Files inside it and all nested folders are loaded automatically, then shown as videos or documents.'
+                }),
+                PropertyPaneTextField('documentLibraryName', {
+                  label: 'Document library name',
+                  value: 'LearningandDevelopmentVideo',
+                  description: 'Example: LearningandDevelopmentVideo. Leave blank to hide dynamic training content.'
                 })
               ]
             }

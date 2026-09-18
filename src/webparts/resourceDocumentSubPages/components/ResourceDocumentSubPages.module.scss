@@ -16,6 +16,7 @@
 
   box-sizing: border-box;
   width: 100%;
+  max-width: none;
   margin: 0 auto;
   padding: 0;
   overflow: hidden;
@@ -44,9 +45,11 @@
 }
 
 .heroInner {
-  width: min(100%, 1160px);
+  // In a SharePoint full-width section, let the hero use the entire canvas.
+  width: 100%;
+  max-width: none;
   margin: 0 auto;
-  padding: 42px 36px 48px;
+  padding: 50px clamp(36px, 7.35vw, 106px) 58px;
 }
 
 // Shared button/link treatment used by the hero and cards.
@@ -106,11 +109,13 @@
 // -----------------------------------------------------------------------------
 .content {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 270px;
+  // The flexible video area and fixed document panel reproduce the full-width reference layout.
+  grid-template-columns: minmax(0, 1fr) minmax(270px, 320px);
   gap: 24px;
-  width: min(100%, 1160px);
+  width: 100%;
+  max-width: none;
   margin: 0 auto;
-  padding: 42px 36px 52px;
+  padding: 56px clamp(20px, 2.7vw, 40px) 60px;
 }
 
 .mainColumn {
