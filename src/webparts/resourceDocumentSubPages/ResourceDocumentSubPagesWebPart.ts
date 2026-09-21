@@ -118,7 +118,7 @@ export default class ResourceDocumentSubPagesWebPart extends BaseClientSideWebPa
                 }),
                 PropertyPaneTextField('documentLibraryName', {
                   label: 'Document library name',
-                  value: 'LearningandDevelopmentVideo',
+                  value: 'Learning and Development Video',
                   description: 'Example: LearningandDevelopmentVideo. Leave blank to hide dynamic training content.'
                 })
               ]
