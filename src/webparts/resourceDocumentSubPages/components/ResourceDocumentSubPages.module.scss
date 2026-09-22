@@ -1,6 +1,33 @@
 // -----------------------------------------------------------------------------
 // WOODLINE BRAND VARIABLES AND BASE WEB PART STYLES
 // -----------------------------------------------------------------------------
+// These page/workbench containers are outside the CSS-module root, so their
+// selectors must be global. Attribute selectors cover SPFx's generated names.
+:global(.CanvasZone),
+:global(.CanvasZoneSection-container),
+:global(.CanvasSection),
+:global(.CanvasSection-col),
+:global(.ControlZone),
+:global(.ControlZone-container),
+:global(.SPCanvas-canvas),
+:global(.SPCanvasContent),
+:global(#workbenchPageContent),
+:global(.workbenchPageContent),
+:global([class*="CanvasZone"]),
+:global([class*="CanvasSection"]),
+:global([class*="ControlZone"]),
+:global([class*="SPCanvas"]),
+:global([class*="workbench"]),
+:global([data-automation-id="CanvasZone"]) {
+  box-sizing: border-box;
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
 .resourceDocumentSubPages {
   --navy-primary: #00205c;
   --navy-deep: #061b48;
@@ -13,6 +40,8 @@
   --cream-card: #f2efdf;
   --text-muted: #687994;
   --border-light: #e4dec9;
+  // The header and content use this same gutter so their left edges align.
+  --page-gutter: clamp(20px, 2.7vw, 40px);
 
   box-sizing: border-box;
   width: 100%;
@@ -45,11 +74,10 @@
 }
 
 .heroInner {
-  // In a SharePoint full-width section, let the hero use the entire canvas.
   width: 100%;
   max-width: none;
   margin: 0 auto;
-  padding: 50px clamp(36px, 7.35vw, 106px) 58px;
+  padding: clamp(36px, 4vw, 50px) var(--page-gutter) clamp(42px, 4.5vw, 58px);
 }
 
 // Shared button/link treatment used by the hero and cards.
@@ -115,7 +143,7 @@
   width: 100%;
   max-width: none;
   margin: 0 auto;
-  padding: 56px clamp(20px, 2.7vw, 40px) 60px;
+  padding: clamp(36px, 4.5vw, 56px) var(--page-gutter) clamp(42px, 5vw, 60px);
 }
 
 .mainColumn {
@@ -154,6 +182,32 @@
   border-radius: 6px;
   background: #fff;
   box-shadow: 0 3px 9px rgba(6, 27, 72, .09);
+}
+
+// The card is one button so clicking anywhere opens the in-page video viewer.
+.videoCardLink {
+  display: block;
+  height: 100%;
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+}
+
+.videoCardLink:hover .videoThumbnail,
+.videoCardLink:focus-visible .videoThumbnail {
+  filter: brightness(1.1);
+}
+
+.videoCardLink:focus-visible,
+.documentItem:focus-visible {
+  outline: 3px solid var(--gold-primary);
+  outline-offset: -3px;
 }
 
 // Blue area that represents a video thumbnail.
@@ -241,6 +295,94 @@
 }
 
 // -----------------------------------------------------------------------------
+// VIDEO VIEWER
+// -----------------------------------------------------------------------------
+// Fixed overlay keeps the player centred above SharePoint and the workbench UI.
+.videoModal {
+  position: fixed;
+  z-index: 10000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0, 32, 92, .62);
+}
+
+.videoViewer {
+  width: min(100%, 980px);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .35);
+}
+
+.videoViewerHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 24px;
+}
+
+.viewerEyebrow {
+  display: block;
+  color: var(--navy-primary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.videoViewerHeader h2 {
+  margin: 5px 0 0;
+  color: var(--navy-primary);
+  font-family: inherit;
+  font-size: clamp(18px, 2.4vw, 24px);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.closeViewer {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--cream-card);
+  color: var(--navy-primary);
+  cursor: pointer;
+  font-size: 27px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.videoPlayer {
+  display: block;
+  width: 100%;
+  max-height: min(62vh, 590px);
+  background: var(--navy-deep);
+}
+
+// Dynamic properties returned by SharePoint and the browser's media metadata.
+.videoMetadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  padding: 18px 24px 22px;
+}
+
+.videoMetadata span {
+  border: 1px solid var(--border-light);
+  border-radius: 999px;
+  padding: 6px 11px;
+  background: var(--cream-bg);
+  color: var(--navy-primary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+// -----------------------------------------------------------------------------
 // DOCUMENT LIBRARY SIDEBAR
 // -----------------------------------------------------------------------------
 .documentsPanel {
@@ -303,6 +445,7 @@
   border-top: 1px solid var(--border-light);
   padding: 5px 0px;
   text-decoration: none;
+  cursor: pointer;
   font-size: 9px;
 }
 
@@ -404,8 +547,41 @@
     padding-bottom: 32px;
   }
 
+  .hero h1 {
+    font-size: 32px;
+    line-height: 1.08;
+  }
+
+  .hero p {
+    font-size: 12px;
+  }
+
   .content {
     padding-top: 28px;
+    padding-bottom: 36px;
+  }
+
+  .videoSection h2,
+  .documentsHeading h2 {
+    font-size: 23px;
+  }
+
+  .documentsBody {
+    padding: 16px 14px;
+  }
+
+  .videoModal {
+    padding: 12px;
+  }
+
+  .videoViewerHeader,
+  .videoMetadata {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .videoMetadata span {
+    font-size: 11px;
   }
 
   // One video card per row on small phones.

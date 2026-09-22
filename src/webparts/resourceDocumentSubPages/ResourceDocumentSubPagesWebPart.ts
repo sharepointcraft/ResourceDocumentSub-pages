@@ -39,6 +39,43 @@ export default class ResourceDocumentSubPagesWebPart extends BaseClientSideWebPa
     );
 
     ReactDom.render(element, this.domElement);
+    this._removeContainerMaxWidths();
+  }
+
+  /** Removes the width constraints added by modern pages and both workbenches. */
+  private _removeContainerMaxWidths(): void {
+    const containerSelector: string = [
+      '.CanvasZone',
+      '.CanvasZoneSection-container',
+      '.CanvasSection',
+      '.CanvasSection-col',
+      '.ControlZone',
+      '.ControlZone-container',
+      '.SPCanvas-canvas',
+      '.SPCanvasContent',
+      '#workbenchPageContent',
+      '.workbenchPageContent',
+      '[class*="CanvasZone"]',
+      '[class*="CanvasSection"]',
+      '[class*="ControlZone"]',
+      '[class*="SPCanvas"]',
+      '[class*="workbench"]',
+      '[data-automation-id="CanvasZone"]'
+    ].join(', ');
+
+    let container: HTMLElement | null = this.domElement;
+    while (container) {
+      if (container.matches(containerSelector)) {
+        container.style.setProperty('width', '100%', 'important');
+        container.style.setProperty('max-width', 'none', 'important');
+        container.style.setProperty('margin-left', '0', 'important');
+        container.style.setProperty('margin-right', '0', 'important');
+        container.style.setProperty('padding-left', '0', 'important');
+        container.style.setProperty('padding-right', '0', 'important');
+      }
+
+      container = container.parentElement;
+    }
   }
 
   protected onInit(): Promise<void> {

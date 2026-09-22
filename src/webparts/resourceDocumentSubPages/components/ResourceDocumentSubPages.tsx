@@ -3,11 +3,18 @@ import styles from './ResourceDocumentSubPages.module.scss';
 import type { IResourceDocumentSubPagesProps } from './IResourceDocumentSubPagesProps';
 import { ITrainingDocument, ITrainingLibraryContent, ITrainingVideo, TrainingLibraryService } from '../services/TrainingLibraryService';
 
-interface IState extends ITrainingLibraryContent { isLoading: boolean; errorMessage?: string; }
+interface IState extends ITrainingLibraryContent {
+  isLoading: boolean;
+  errorMessage?: string;
+  selectedVideo?: ITrainingVideo;
+  videoDuration?: string;
+}
 
-/** Reusable video card; its link uses the SharePoint video URL returned from the API. */
-const VideoCard: React.FC<{ video: ITrainingVideo }> = ({ video }) => (
+/** Reusable video card; clicking it opens the in-page player for its SharePoint file. */
+const VideoCard: React.FC<{ video: ITrainingVideo; onOpen: (video: ITrainingVideo) => void }> = ({ video, onOpen }) => (
   <article className={styles.videoCard}>
+    {/* A button gives the entire card mouse and keyboard support without nesting links. */}
+    <button type="button" className={styles.videoCardLink} onClick={() => onOpen(video)} aria-label={`Play video: ${video.title}`}>
     <div className={styles.videoThumbnail}>
       {video.isNew && <span className={styles.newBadge}>New training</span>}
       {video.duration && <span className={styles.duration}>{video.duration}</span>}
@@ -16,8 +23,9 @@ const VideoCard: React.FC<{ video: ITrainingVideo }> = ({ video }) => (
     <div className={styles.videoContent}>
       <h3>{video.title}</h3><p>{video.subtitle}</p>
       {video.date && <p className={styles.videoDate}>{video.date}</p>}
-      <a className={styles.watchButton} href={video.videoUrl} target="_blank" rel="noopener noreferrer">Watch session</a>
+      <span className={styles.watchButton}>Watch session</span>
     </div>
+    </button>
   </article>
 );
 
@@ -63,6 +71,25 @@ export default class ResourceDocumentSubPages extends React.Component<IResourceD
     }
   }
 
+  /** Opens the selected video in the viewer and clears duration from a prior video. */
+  private _openVideo = (video: ITrainingVideo): void => { this.setState({ selectedVideo: video, videoDuration: undefined }); };
+
+  /** Closes the viewer; unmounting the video element also stops its playback. */
+  private _closeVideo = (): void => { this.setState({ selectedVideo: undefined, videoDuration: undefined }); };
+
+  /** Converts the browser-provided duration in seconds into 0:00 or 0:00:00. */
+  private _setVideoDuration = (event: React.SyntheticEvent<HTMLVideoElement>): void => {
+    const duration: number = event.currentTarget.duration;
+    if (!Number.isFinite(duration)) { return; }
+    const totalSeconds: number = Math.round(duration);
+    // String concatenation keeps this formatter compatible with the SPFx ES target.
+    const seconds: string = (`0${totalSeconds % 60}`).slice(-2);
+    const minutes: number = Math.floor(totalSeconds / 60) % 60;
+    const hours: number = Math.floor(totalSeconds / 3600);
+    const paddedMinutes: string = (`0${minutes}`).slice(-2);
+    this.setState({ videoDuration: hours > 0 ? `${hours}:${paddedMinutes}:${seconds}` : `${minutes}:${seconds}` });
+  };
+
   public render(): React.ReactElement<IResourceDocumentSubPagesProps> {
     const newestVideos: ITrainingVideo[] = this.state.videos.slice(0, 3);
     const remainingVideos: ITrainingVideo[] = this.state.videos.slice(3);
@@ -83,12 +110,12 @@ export default class ResourceDocumentSubPages extends React.Component<IResourceD
             {newestVideos.length > 0 && <section className={styles.videoSection} aria-labelledby="new-videos-title">
               <h2 id="new-videos-title">Newly Uploaded Training Videos</h2>
               <p className={styles.sectionIntro}>The three most recently modified videos in {this.props.documentLibraryName}.</p>
-              <div className={styles.videoGrid}>{newestVideos.map(video => <VideoCard key={video.videoUrl} video={video} />)}</div>
+              <div className={styles.videoGrid}>{newestVideos.map(video => <VideoCard key={video.videoUrl} video={video} onOpen={this._openVideo} />)}</div>
             </section>}
             {remainingVideos.length > 0 && <section className={styles.videoSection} aria-labelledby="all-videos-title">
               <h2 id="all-videos-title">All Analyst Training Videos</h2>
               <p className={styles.sectionIntro}>Additional videos from the selected training library.</p>
-              <div className={styles.videoGrid}>{remainingVideos.map(video => <VideoCard key={video.videoUrl} video={video} />)}</div>
+              <div className={styles.videoGrid}>{remainingVideos.map(video => <VideoCard key={video.videoUrl} video={video} onOpen={this._openVideo} />)}</div>
             </section>}
             <section className={styles.nextTraining}>
               <span className={styles.eyebrow}>Analyst development</span><h2>Next Analyst Training Day</h2>
@@ -110,6 +137,23 @@ export default class ResourceDocumentSubPages extends React.Component<IResourceD
             </div>
           </aside>}
         </main>
+        {/* The player only mounts after a user selects a video, avoiding background downloads. */}
+        {this.state.selectedVideo && <div className={styles.videoModal} role="dialog" aria-modal="true" aria-labelledby="video-viewer-title">
+          <div className={styles.videoViewer}>
+            <div className={styles.videoViewerHeader}>
+              <div><span className={styles.viewerEyebrow}>Analyst Training</span><h2 id="video-viewer-title">{this.state.selectedVideo.title}</h2></div>
+              <button type="button" className={styles.closeViewer} onClick={this._closeVideo} aria-label="Close video viewer">×</button>
+            </div>
+            {/* Native controls handle play, seek, sound, fullscreen, and accessible video playback. */}
+            <video className={styles.videoPlayer} src={this.state.selectedVideo.videoUrl} controls autoPlay preload="metadata" onLoadedMetadata={this._setVideoDuration}>
+              Your browser does not support video playback.
+            </video>
+            <div className={styles.videoMetadata}>
+              <span>▣ {this.state.selectedVideo.created}</span><span>◷ {this.state.videoDuration || 'Loading duration…'}</span>
+              <span>▱ {this.state.selectedVideo.fileSize}</span><span>▱ {this.state.selectedVideo.fileType}</span>
+            </div>
+          </div>
+        </div>}
       </section>
     );
   }
