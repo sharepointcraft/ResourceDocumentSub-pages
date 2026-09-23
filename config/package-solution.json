@@ -3,7 +3,7 @@
   "solution": {
     "name": "resource-document-sub-pages-client-side-solution",
     "id": "aca55c44-738c-49b0-8c93-343a7c596139",
-    "version": "1.0.0.0",
+    "version": "1.0.0.1",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,

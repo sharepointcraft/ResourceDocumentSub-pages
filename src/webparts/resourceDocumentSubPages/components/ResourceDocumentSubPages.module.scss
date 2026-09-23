@@ -443,10 +443,11 @@
   gap: 7px;
   align-items: start;
   border-top: 1px solid var(--border-light);
-  padding: 5px 0px;
+  padding: 7px 0;
   text-decoration: none;
   cursor: pointer;
-  font-size: 9px;
+  // Slightly larger base text makes file details easier to scan without changing the card layout.
+  font-size: 10px;
 }
 
 .documentIcon {
@@ -466,20 +467,58 @@
 }
 
 .documentItem strong {
-  line-height: 1.2;
+  // Larger title and line-height preserve readable multi-line file names.
+  font-size: 14px;
+  line-height: 1.25;
 }
 
 .documentItem small {
-  margin-top: 5px;
+  margin-top: 4px;
   color: var(--text-muted);
-  font-size: 7px;
+  font-size: 10px;
+  line-height: 1.3;
 }
 
 .documentItem em {
   color: var(--gold-dark);
-  font-size: 7px;
+  font-size: 10px;
   font-style: normal;
   font-weight: 700;
+}
+
+// Client-side pagination sits below document rows and never creates a scrollable file area.
+.documentPagination {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  border-top: 1px solid var(--border-light);
+  padding-top: 12px;
+  color: var(--navy-primary);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+// Buttons use the standard finger pointer so users know the page controls are clickable.
+.documentPagination button {
+  border: 0;
+  background: transparent;
+  padding: 3px 0;
+  color: var(--navy-primary);
+  cursor: pointer !important;
+  font: inherit;
+  text-align: left;
+}
+
+.documentPagination button:last-child {
+  text-align: right;
+}
+
+.documentPagination button:disabled {
+  color: var(--text-muted);
+  cursor: default;
+  opacity: .6;
 }
 
 // -----------------------------------------------------------------------------
@@ -568,6 +607,11 @@
 
   .documentsBody {
     padding: 16px 14px;
+  }
+
+  // Keeps the improved file title readable while fitting narrow document panels.
+  .documentItem strong {
+    font-size: 13px;
   }
 
   .videoModal {

@@ -151,12 +151,12 @@ export default class ResourceDocumentSubPagesWebPart extends BaseClientSideWebPa
               groupName: 'Training library settings',
               groupFields: [
                 PropertyPaneLabel('libraryHelp', {
-                  text: 'Enter the SharePoint document library name. Files inside it and all nested folders are loaded automatically, then shown as videos or documents.'
+                  text: 'Enter the SharePoint document library display name or internal/root folder name. Files inside it and all nested folders are loaded automatically, then shown as videos or documents.'
                 }),
                 PropertyPaneTextField('documentLibraryName', {
                   label: 'Document library name',
                   value: 'Learning and Development Video',
-                  description: 'Example: LearningandDevelopmentVideo. Leave blank to hide dynamic training content.'
+                  description: 'Example: Learning and Development Video Library or LearningandDevelopmentVideoLibrary. Leave blank to hide dynamic training content.'
                 })
               ]
             }

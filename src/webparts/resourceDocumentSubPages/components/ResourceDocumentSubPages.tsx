@@ -3,8 +3,15 @@ import styles from './ResourceDocumentSubPages.module.scss';
 import type { IResourceDocumentSubPagesProps } from './IResourceDocumentSubPagesProps';
 import { ITrainingDocument, ITrainingLibraryContent, ITrainingVideo, TrainingLibraryService } from '../services/TrainingLibraryService';
 
+// A single constant keeps the rendered slice and page navigation at the same eight-item limit.
+const DOCUMENTS_PER_PAGE: number = 8;
+// A minute avoids continuous traffic while making library updates visible without a page refresh.
+const LIBRARY_CHANGE_CHECK_INTERVAL_MS: number = 60000;
+
 interface IState extends ITrainingLibraryContent {
   isLoading: boolean;
+  // Tracks the client-side document page so page changes never request SharePoint again.
+  currentDocumentPage: number;
   errorMessage?: string;
   selectedVideo?: ITrainingVideo;
   videoDuration?: string;
@@ -32,21 +39,38 @@ const VideoCard: React.FC<{ video: ITrainingVideo; onOpen: (video: ITrainingVide
 /** Main Analyst Training web part component. */
 export default class ResourceDocumentSubPages extends React.Component<IResourceDocumentSubPagesProps, IState> {
   private _requestNumber: number = 0;
+  private readonly _trainingLibraryService: TrainingLibraryService;
+  private _libraryChangeTimer: number | undefined;
+  private _isCheckingLibraryChanges: boolean = false;
 
   public constructor(props: IResourceDocumentSubPagesProps) {
     super(props);
-    this.state = { videos: [], documents: [], isLoading: true };
+    this.state = { videos: [], documents: [], isLoading: true, currentDocumentPage: 1 };
+    // Reuse one service instance so its resolved library ID can be reused by change checks.
+    this._trainingLibraryService = new TrainingLibraryService(props.context.spHttpClient, props.context.pageContext.web.absoluteUrl);
   }
 
   /** Loads content from the library selected in the property pane when the component appears. */
-  public componentDidMount(): void { this._loadLibraryContent().catch(() => undefined); }
+  public componentDidMount(): void {
+    this._loadLibraryContent().catch(() => undefined);
+    // Poll only the library change timestamp; file data is requested only after an actual change.
+    this._libraryChangeTimer = window.setInterval(() => { this._checkForLibraryChanges().catch(() => undefined); }, LIBRARY_CHANGE_CHECK_INTERVAL_MS);
+  }
 
   /** A changed property-pane value arrives as a prop and prompts a new dynamic REST request. */
   public componentDidUpdate(previousProps: IResourceDocumentSubPagesProps): void {
-    if (previousProps.documentLibraryName !== this.props.documentLibraryName) { this._loadLibraryContent().catch(() => undefined); }
+    if (previousProps.documentLibraryName !== this.props.documentLibraryName) {
+      // A changed library selection starts the document list at page one before its new content arrives.
+      this.setState({ currentDocumentPage: 1 });
+      this._loadLibraryContent().catch(() => undefined);
+    }
   }
 
-  public componentWillUnmount(): void { this._requestNumber++; }
+  public componentWillUnmount(): void {
+    this._requestNumber++;
+    // Clear the timer so an unmounted web part never continues making SharePoint requests.
+    if (this._libraryChangeTimer !== undefined) { window.clearInterval(this._libraryChangeTimer); }
+  }
 
   /**
    * The service receives the configured library name and authenticated SPFx context. A request
@@ -56,18 +80,35 @@ export default class ResourceDocumentSubPages extends React.Component<IResourceD
     const requestNumber: number = ++this._requestNumber;
     const libraryName: string = this.props.documentLibraryName.trim();
     if (!libraryName) {
-      this.setState({ videos: [], documents: [], isLoading: false, errorMessage: undefined });
+      this.setState({ videos: [], documents: [], isLoading: false, currentDocumentPage: 1, errorMessage: undefined });
       return;
     }
     this.setState({ isLoading: true, errorMessage: undefined });
     try {
-      const service: TrainingLibraryService = new TrainingLibraryService(this.props.context.spHttpClient, this.props.context.pageContext.web.absoluteUrl);
-      const content: ITrainingLibraryContent = await service.getLibraryContent(libraryName);
-      if (requestNumber === this._requestNumber) { this.setState({ ...content, isLoading: false }); }
+      const content: ITrainingLibraryContent = await this._trainingLibraryService.getLibraryContent(libraryName);
+      // Newly loaded content resets pagination; pagination clicks only update local component state.
+      if (requestNumber === this._requestNumber) { this.setState({ ...content, currentDocumentPage: 1, isLoading: false }); }
     } catch (error) {
       if (requestNumber === this._requestNumber) {
-        this.setState({ videos: [], documents: [], isLoading: false, errorMessage: error instanceof Error ? error.message : 'Training content could not be loaded.' });
+        this.setState({ videos: [], documents: [], currentDocumentPage: 1, isLoading: false, errorMessage: error instanceof Error ? error.message : 'Training content could not be loaded.' });
       }
+    }
+  }
+
+  /** Reloads existing data only when SharePoint reports that the configured library has changed. */
+  private async _checkForLibraryChanges(): Promise<void> {
+    const libraryName: string = this.props.documentLibraryName.trim();
+    // Hidden tabs and active loads are skipped to avoid unnecessary requests and overlapping reloads.
+    if (!libraryName || document.hidden || this.state.isLoading || this._isCheckingLibraryChanges) { return; }
+    this._isCheckingLibraryChanges = true;
+    try {
+      const latestLibraryChange: string | undefined = await this._trainingLibraryService.getLibraryLastModified(libraryName);
+      if (latestLibraryChange && this.state.libraryLastModified && latestLibraryChange !== this.state.libraryLastModified) {
+        // A new file, edit, delete, or item metadata update changes this timestamp and refreshes current data.
+        await this._loadLibraryContent();
+      }
+    } finally {
+      this._isCheckingLibraryChanges = false;
     }
   }
 
@@ -76,6 +117,27 @@ export default class ResourceDocumentSubPages extends React.Component<IResourceD
 
   /** Closes the viewer; unmounting the video element also stops its playback. */
   private _closeVideo = (): void => { this.setState({ selectedVideo: undefined, videoDuration: undefined }); };
+
+  /** Stops the canvas click event, then advances to the next already-loaded set of eight files. */
+  private _goToNextDocumentPage = (event: React.MouseEvent<HTMLButtonElement>): void => {
+    event.preventDefault();
+    event.stopPropagation();
+    this.setState(previousState => {
+      const pageCount: number = Math.ceil(previousState.documents.length / DOCUMENTS_PER_PAGE);
+      const nextPage: number = Math.min(previousState.currentDocumentPage + 1, pageCount);
+      return { currentDocumentPage: nextPage };
+    });
+  };
+
+  /** Stops the canvas click event, then returns to the preceding already-loaded set of eight files. */
+  private _goToPreviousDocumentPage = (event: React.MouseEvent<HTMLButtonElement>): void => {
+    event.preventDefault();
+    event.stopPropagation();
+    this.setState(previousState => {
+      const previousPage: number = Math.max(previousState.currentDocumentPage - 1, 1);
+      return { currentDocumentPage: previousPage };
+    });
+  };
 
   /** Converts the browser-provided duration in seconds into 0:00 or 0:00:00. */
   private _setVideoDuration = (event: React.SyntheticEvent<HTMLVideoElement>): void => {
@@ -94,6 +156,10 @@ export default class ResourceDocumentSubPages extends React.Component<IResourceD
     const newestVideos: ITrainingVideo[] = this.state.videos.slice(0, 3);
     const remainingVideos: ITrainingVideo[] = this.state.videos.slice(3);
     const documents: ITrainingDocument[] = this.state.documents;
+    // Client-side pagination keeps the document panel compact without changing SharePoint retrieval.
+    const documentPageCount: number = Math.ceil(documents.length / DOCUMENTS_PER_PAGE);
+    const currentDocumentPage: number = Math.min(this.state.currentDocumentPage, documentPageCount || 1);
+    const pagedDocuments: ITrainingDocument[] = documents.slice((currentDocumentPage - 1) * DOCUMENTS_PER_PAGE, currentDocumentPage * DOCUMENTS_PER_PAGE);
     return (
       <section className={styles.resourceDocumentSubPages}>
         <header className={styles.hero}><div className={styles.heroInner}>
@@ -109,7 +175,8 @@ export default class ResourceDocumentSubPages extends React.Component<IResourceD
             {/* Empty video sections are omitted; API results alone determine what is shown. */}
             {newestVideos.length > 0 && <section className={styles.videoSection} aria-labelledby="new-videos-title">
               <h2 id="new-videos-title">Newly Uploaded Training Videos</h2>
-              <p className={styles.sectionIntro}>The three most recently modified videos in {this.props.documentLibraryName}.</p>
+              {/* This wording matches the service rule: new videos are selected by Created date, not Modified date. */}
+              <p className={styles.sectionIntro}>The three most recently uploaded videos in {this.props.documentLibraryName}.</p>
               <div className={styles.videoGrid}>{newestVideos.map(video => <VideoCard key={video.videoUrl} video={video} onOpen={this._openVideo} />)}</div>
             </section>}
             {remainingVideos.length > 0 && <section className={styles.videoSection} aria-labelledby="all-videos-title">
@@ -128,12 +195,19 @@ export default class ResourceDocumentSubPages extends React.Component<IResourceD
             <div className={styles.documentsHeading}><h2 id="documents-title">Analyst Training<br />Documents</h2></div>
             <div className={styles.documentsBody}>
               <div className={styles.documentsLibraryHeader}><h3>Document<br />Library</h3><span className={styles.referenceMaterials}>Reference<br />Materials</span></div>
-              {documents.map(document => (
+              {/* Only the current page's already-loaded documents are rendered as existing file cards. */}
+              {pagedDocuments.map(document => (
                 /* REST provides documentUrl; the link opens the authorized SharePoint file in a new tab. */
                 <a className={styles.documentItem} href={document.documentUrl} target="_blank" rel="noopener noreferrer" key={document.documentUrl}>
                   <span className={styles.documentIcon}>◰</span><span><strong>{document.title}</strong><small>{document.updated}</small></span><em>{document.type}</em>
                 </a>
               ))}
+              {/* Pagination is omitted for eight or fewer files and does not reload the page or data. */}
+              {documentPageCount > 1 && <nav className={styles.documentPagination} aria-label="Document library pagination">
+                <button type="button" onClick={this._goToPreviousDocumentPage} disabled={currentDocumentPage === 1}>‹ Previous</button>
+                <span aria-current="page">{currentDocumentPage} / {documentPageCount}</span>
+                <button type="button" onClick={this._goToNextDocumentPage} disabled={currentDocumentPage === documentPageCount}>Next ›</button>
+              </nav>}
             </div>
           </aside>}
         </main>
